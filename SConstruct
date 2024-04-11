@@ -381,6 +381,10 @@ if arch != "Darwin":
     'system/logcatd/SConscript',
   ])
 
+#Build Unreal Support
+
+SConscript(['tools/sim/unreal/SConscript'])
+
 # Build openpilot
 SConscript(['third_party/SConscript'])
 
