@@ -49,7 +49,6 @@ class SimulatedSensors:
       simulator_state.velocity.x,
       simulator_state.velocity.z,
     ]
-
     for _ in range(10):
       dat = messaging.new_message('gpsLocationExternal', valid=True)
       dat.gpsLocationExternal = {
@@ -60,9 +59,10 @@ class SimulatedSensors:
         "speedAccuracy": 0.1,
         "bearingAccuracyDeg": 0.1,
         "vNED": velNED,
+
         "bearingDeg": simulator_state.imu.bearing,
-        "latitude": simulator_state.gps.latitude,
-        "longitude": simulator_state.gps.longitude,
+        "latitude": 53.53850991408303, #simulator_state.gps.latitude,
+        "longitude": -113.51946106778773, #simulator_state.gps.longitude,
         "altitude": simulator_state.gps.altitude,
         "speed": simulator_state.speed,
         "source": log.GpsLocationData.SensorSource.ublox,
@@ -108,7 +108,7 @@ class SimulatedSensors:
       yuv = self.camerad.rgb_to_yuv(world.wide_road_image)
       self.camerad.cam_send_yuv_wide_road(yuv)
 
-  def update(self, simulator_state: 'SimulatorState', world: 'World'):
+  def update(self, simulator_state: 'SimulatorState'):
     now = time.time()
     self.send_imu_message(simulator_state)
     self.send_gps_message(simulator_state)

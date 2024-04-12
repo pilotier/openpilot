@@ -383,7 +383,7 @@ if arch != "Darwin":
 
 #Build Unreal Support
 
-SConscript(['tools/sim/unreal/SConscript'])
+SConscript(['tools/sim/unreal/cap/SConscript'])
 
 # Build openpilot
 SConscript(['third_party/SConscript'])
