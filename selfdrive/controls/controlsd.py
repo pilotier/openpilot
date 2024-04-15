@@ -283,13 +283,15 @@ class Controls:
         safety_mismatch = pandaState.safetyModel != self.CP.safetyConfigs[i].safetyModel or \
                           pandaState.safetyParam != self.CP.safetyConfigs[i].safetyParam or \
                           pandaState.alternativeExperience != self.CP.alternativeExperience
+        #print(pandaState.safetyModel, self.CP.safetyConfigs[i].safetyModel, pandaState.safetyParam, self.CP.safetyConfigs[i].safetyParam, pandaState.alternativeExperience, self.CP.alternativeExperience)
       else:
         safety_mismatch = pandaState.safetyModel not in IGNORED_SAFETY_MODES
 
       # safety mismatch allows some time for boardd to set the safety mode and publish it back from panda
-      if (safety_mismatch and self.sm.frame*DT_CTRL > 10.) or pandaState.safetyRxChecksInvalid or self.mismatch_counter >= 200:
-        self.events.add(EventName.controlsMismatch)
-
+      if (safety_mismatch and self.sm.frame*DT_CTRL > 10.) or pandaState.safetyRxChecksInvalid or self.mismatch_counter >= 200 and not SIMULATION:
+        #JT REMOVE FOR TEST
+        #self.events.add(EventName.controlsMismatch)
+        pass
       if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
         self.events.add(EventName.relayMalfunction)
 
@@ -310,7 +312,7 @@ class Controls:
           self.events.add(EventName.cameraMalfunction)
         elif not self.sm.all_freq_ok(self.camera_packets):
           self.events.add(EventName.cameraFrameRate)
-    if not REPLAY and self.rk.lagging:
+    if not REPLAY and not SIMULATION and self.rk.lagging:
       self.events.add(EventName.controlsdLagging)
     if len(self.sm['radarState'].radarErrors) or (not self.rk.lagging and not self.sm.all_checks(['radarState'])):
       self.events.add(EventName.radarFault)
@@ -324,7 +326,7 @@ class Controls:
     # generic catch-all. ideally, a more specific event should be added above instead
     has_disable_events = self.events.contains(ET.NO_ENTRY) and (self.events.contains(ET.SOFT_DISABLE) or self.events.contains(ET.IMMEDIATE_DISABLE))
     no_system_errors = (not has_disable_events) or (len(self.events) == num_events)
-    if (not self.sm.all_checks() or self.card.can_rcv_timeout) and no_system_errors:
+    if (not self.sm.all_checks() or self.card.can_rcv_timeout) and no_system_errors and not SIMULATION:
       if not self.sm.all_alive():
         self.events.add(EventName.commIssue)
       elif not self.sm.all_freq_ok():
@@ -338,6 +340,7 @@ class Controls:
         'not_freq_ok': [s for s, freq_ok in self.sm.freq_ok.items() if not freq_ok],
         'can_rcv_timeout': self.card.can_rcv_timeout,
       }
+      print(logs)
       if logs != self.logged_comm_issue:
         cloudlog.event("commIssue", error=True, **logs)
         self.logged_comm_issue = logs

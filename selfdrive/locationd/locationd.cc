@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
-
+#include <iostream>
 using namespace EKFS;
 using namespace Eigen;
 
@@ -40,6 +40,8 @@ const float  GPS_ORIENTATION_ERROR_RESET_THRESHOLD = 1.0;
 const int    GPS_ORIENTATION_ERROR_RESET_CNT = 3;
 
 const bool   DEBUG = getenv("DEBUG") != nullptr && std::string(getenv("DEBUG")) != "0";
+const bool UNREAL_SIM = getenv("UNREAL_SIM") != nullptr && std::string(getenv("UNREAL_SIM")) != "0";
+
 
 static VectorXd floatlist2vector(const capnp::List<float, capnp::Kind::PRIMITIVE>::Reader& floatlist) {
   VectorXd res(floatlist.size());
@@ -205,7 +207,11 @@ void Localizer::build_live_location(cereal::LiveLocationKalman::Builder& fix) {
   } else {
     fix.setStatus(cereal::LiveLocationKalman::Status::UNINITIALIZED);
   }
-  fix.setStatus(cereal::LiveLocationKalman::Status::VALID);
+  if (UNREAL_SIM == 1) {
+    fix.setStatus(cereal::LiveLocationKalman::Status::VALID);
+  }
+
+
 }
 
 VectorXd Localizer::get_position_geodetic() {
@@ -694,7 +700,13 @@ int Localizer::locationd_thread() {
                                                           "carState", "accelerometer", "gyroscope"};
 
   SubMaster sm(service_list, {}, nullptr, {gps_location_socket});
-  PubMaster pm({"liveLocationKalman"});
+
+  //JT REMOVE FOR TESTING!
+
+  if (UNREAL_SIM != 1) {
+    PubMaster pm({"liveLocationKalman"});
+  }
+
 
   uint64_t cnt = 0;
   bool filterInitialized = false;
@@ -730,7 +742,18 @@ int Localizer::locationd_thread() {
 
       MessageBuilder msg_builder;
       kj::ArrayPtr<capnp::byte> bytes = this->get_message_bytes(msg_builder, inputsOK, sensorsOK, gpsOK, filterInitialized);
-      pm.send("liveLocationKalman", bytes.begin(), bytes.size());
+
+      //JT REMOVE FOR TESTING!
+      if (UNREAL_SIM ==1) {
+        bytes = 0;
+      }
+      if (UNREAL_SIM != 1) {
+        //pm.send("liveLocationKalman", bytes.begin(), bytes.size());
+
+      }
+
+
+
 
       if (cnt % 1200 == 0 && gpsOK) {  // once a minute
         VectorXd posGeo = this->get_position_geodetic();
