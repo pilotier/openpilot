@@ -16,6 +16,7 @@ if __name__ == "__main__":
     }
     params.put("NavDestination", json.dumps(dest))
     params.remove("NavDestinationWaypoints")
+
   else:
     print("Setting to Taco Bell")
     dest = {

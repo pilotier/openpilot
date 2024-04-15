@@ -31,8 +31,24 @@ REPEAT_COUNTER = 5
 PRINT_DECIMATION = 100
 
 
-pm = messaging.PubMaster(['frame', 'sensorEvents', 'can'])
+pm = messaging.PubMaster(['liveLocationKalman'])
 sm = messaging.SubMaster(['carControl', 'controlsState'])
+from openpilot.common.mock.generators import generate_liveLocationKalman
+
+
+MOCK_GENERATOR = {
+  "liveLocationKalman": generate_liveLocationKalman
+}
+
+
+def generate_messages_loop():
+    rk = Ratekeeper(20)
+
+    while 1:
+        message = generate_liveLocationKalman()
+        print(message)
+        pm.send('liveLocationKalman', message)
+        rk.keep_time()
 
 class CamFaker:
     def __init__(self):
@@ -62,7 +78,6 @@ def go():
         simulated_car.update(simulator_state)
         simulated_sensors.update(simulator_state)
         cam_faker.send_camera_images()
-        print("Loop")
         rk.keep_time
 
 
@@ -80,8 +95,9 @@ if __name__ == "__main__":
     # msg.liveCalibration.rpyCalib = [0.0, 0.0, 0.0]
     # params.put("CalibrationParams", msg.to_bytes())
     process_sim = multiprocessing.Process(name="metadrive process", target=functools.partial(go))
-
+    process_km = multiprocessing.Process(name="kalmann process", target=functools.partial(generate_messages_loop))
     process_sim.start()
+    process_km.start()
     sm = messaging.SubMaster(['liveLocationKalman'])
     while True:
         llk = sm['liveLocationKalman']
@@ -89,7 +105,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
     # start input poll for keyboard
-    # from lib.keyboard_ctrl import keyboard_poll_thread
+    # from lib.keyboard_ctrl import keybthreard_poll_thread
     # keyboard_poll_thread(q)
 
 

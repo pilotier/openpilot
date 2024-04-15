@@ -197,13 +197,15 @@ void Localizer::build_live_location(cereal::LiveLocationKalman::Builder& fix) {
 
   double time_since_reset = this->kf->get_filter_time() - this->last_reset_time;
   fix.setTimeSinceReset(time_since_reset);
-  if (fix_ecef_std.norm() < VALID_POS_STD && this->calibrated && time_since_reset > VALID_TIME_SINCE_RESET) {
+  //JT NOTE TEST TRUE HERE
+  if (fix_ecef_std.norm() < VALID_POS_STD && this->calibrated && time_since_reset > VALID_TIME_SINCE_RESET )  {
     fix.setStatus(cereal::LiveLocationKalman::Status::VALID);
   } else if (fix_ecef_std.norm() < VALID_POS_STD && time_since_reset > VALID_TIME_SINCE_RESET) {
     fix.setStatus(cereal::LiveLocationKalman::Status::UNCALIBRATED);
   } else {
     fix.setStatus(cereal::LiveLocationKalman::Status::UNINITIALIZED);
   }
+  fix.setStatus(cereal::LiveLocationKalman::Status::VALID);
 }
 
 VectorXd Localizer::get_position_geodetic() {
