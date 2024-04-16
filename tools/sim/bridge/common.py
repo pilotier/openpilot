@@ -154,7 +154,12 @@ Ignition: {self.simulator_state.ignition} Engaged: {self.simulator_state.is_enga
       controlsState = self.simulated_car.sm['controlsState']
       self.simulator_state.is_engaged = controlsState.active
 
+
       if self.simulator_state.is_engaged:
+        params = ['carControl', 'controlsState', 'carParams']
+        for sm in params:
+          print(f"{sm}: {self.simulated_car.sm[sm]}")
+        print("\n==========\n\n")
         throttle_op = clip(self.simulated_car.sm['carControl'].actuators.accel / 1.6, 0.0, 1.0)
         brake_op = clip(-self.simulated_car.sm['carControl'].actuators.accel / 4.0, 0.0, 1.0)
         steer_op = self.simulated_car.sm['carControl'].actuators.steeringAngleDeg
